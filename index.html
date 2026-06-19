@@ -4,54 +4,95 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Teste de Elegibilidade Previdenciária — Protótipo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f6f5f2;
+    --bg: #f7f7fb;
     --card: #ffffff;
-    --ink: #1f2a24;
-    --muted: #6b7570;
-    --primary: #2f6f4f;
-    --primary-dark: #234f38;
+    --card-2: #f1f0fa;
+    --ink: #1c1a2e;
+    --muted: #6b6886;
+    --primary: #6d4aff;
+    --primary-2: #4f6bff;
+    --primary-dark: #5636e0;
+    --header-bg: #050718;
     --warn: #b5841f;
-    --bad: #a13c3c;
-    --border: #e2e0d8;
+    --bad: #8b87a8;
+    --border: #e2e0f0;
+    --border-hover: #6d4aff;
+    --font: "Space Grotesk", -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: var(--font);
     background: var(--bg);
     color: var(--ink);
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .site-header {
+    width: 100%;
+    background: var(--header-bg);
+    padding: 16px 24px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .site-header-inner {
+    max-width: 640px;
+    margin: 0 auto;
     display: flex;
-    align-items: center;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .site-header h2 {
+    margin: 0;
+    font-family: var(--font);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #ffffff;
+  }
+  .site-header .version {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.65);
+    white-space: nowrap;
+  }
+  .page-wrap {
+    display: flex;
     justify-content: center;
-    padding: 24px;
+    padding: 32px 24px;
   }
   .app {
     width: 100%;
-    max-width: 560px;
+    max-width: 640px;
   }
   .topbar {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
+    gap: 14px;
+    margin-bottom: 22px;
   }
   .back-btn {
     background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    width: 36px;
-    height: 36px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 16px;
     color: var(--ink);
     flex-shrink: 0;
   }
+  .back-btn:hover { border-color: var(--primary); }
+  .back-btn svg { width: 20px; height: 20px; }
   .back-btn:disabled {
     opacity: 0.3;
     cursor: not-allowed;
@@ -65,186 +106,262 @@
   }
   .progress-fill {
     height: 100%;
-    background: var(--primary);
+    background: linear-gradient(90deg, var(--primary-2), var(--primary));
     transition: width .25s ease;
     border-radius: 999px;
   }
   .step-label {
-    font-size: 12px;
+    font-size: 14px;
+    font-weight: 500;
     color: var(--muted);
     white-space: nowrap;
   }
   .card {
     background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 28px 24px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    border: 1.5px solid var(--border);
+    border-radius: 22px;
+    padding: 30px 28px;
+    box-shadow: 0 2px 8px rgba(28,26,46,0.04);
   }
   .eyebrow {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: .04em;
-    color: var(--primary);
-    margin-bottom: 8px;
+    letter-spacing: .06em;
+    background: linear-gradient(90deg, var(--primary-2), var(--primary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 10px;
   }
   h1.question {
-    font-size: 22px;
-    line-height: 1.35;
-    margin: 0 0 6px;
+    font-size: 27px;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
   }
   .hint {
-    font-size: 14px;
+    font-size: 15px;
     color: var(--muted);
+    line-height: 1.4;
     margin: 0 0 20px;
   }
   .options {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  .options.options-wide {
+    grid-template-columns: 1fr;
+  }
+  .options.options-triple {
+    grid-template-columns: repeat(3, 1fr);
   }
   .opt-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
     text-align: left;
-    background: #fff;
+    background: var(--card-2);
     border: 1.5px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 16px;
-    font-size: 15px;
+    border-radius: 18px;
+    padding: 22px 20px;
+    min-height: 124px;
+    font-family: var(--font);
+    font-size: 16px;
+    font-weight: 500;
     color: var(--ink);
     cursor: pointer;
-    transition: border-color .15s, background .15s;
+    transition: border-color .15s, transform .1s;
   }
   .opt-btn:hover {
-    border-color: var(--primary);
-    background: #f3f8f5;
+    border-color: var(--border-hover);
   }
+  .opt-btn:active { transform: scale(0.98); }
   .opt-btn.selected {
     border-color: var(--primary);
-    background: #eaf4ee;
+    background: linear-gradient(135deg, rgba(109,74,255,0.10), rgba(79,107,255,0.06));
     font-weight: 600;
   }
+  .options-wide .opt-btn {
+    flex-direction: row;
+    align-items: center;
+    min-height: unset;
+    padding: 18px 20px;
+  }
+  .opt-icon {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+  }
+  .opt-icon svg { width: 28px; height: 28px; stroke-width: 1.6; }
+  .opt-label { flex: 1; line-height: 1.3; }
   input[type="number"], input[type="text"], input[type="tel"] {
     width: 100%;
-    padding: 12px 14px;
-    font-size: 16px;
+    padding: 15px 16px;
+    font-family: var(--font);
+    font-size: 17px;
+    background: var(--card-2);
+    color: var(--ink);
     border: 1.5px solid var(--border);
-    border-radius: 10px;
+    border-radius: 13px;
     margin-bottom: 14px;
   }
-  input:focus { outline: 2px solid var(--primary); border-color: var(--primary); }
+  input[type="number"].input-hero {
+    font-size: 46px;
+    font-weight: 600;
+    text-align: center;
+    padding: 16px 18px;
+    letter-spacing: -0.02em;
+    color: var(--primary-dark);
+  }
+  input[type="number"].input-hero::-webkit-inner-spin-button,
+  input[type="number"].input-hero::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"].input-hero { -moz-appearance: textfield; }
+  input::placeholder { color: var(--muted); }
+  input:focus { outline: none; border-color: var(--primary); }
   .next-btn {
-    margin-top: 6px;
-    background: var(--primary);
+    margin-top: 4px;
+    background: linear-gradient(90deg, var(--primary-2), var(--primary));
     color: #fff;
     border: none;
-    border-radius: 10px;
-    padding: 13px 18px;
-    font-size: 15px;
+    border-radius: 13px;
+    padding: 15px 20px;
+    font-family: var(--font);
+    font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     width: 100%;
   }
-  .next-btn:hover { background: var(--primary-dark); }
+  .next-btn:hover { filter: brightness(1.08); }
   .next-btn:disabled { opacity: .4; cursor: not-allowed; }
   .result-card {
-    border-radius: 16px;
-    padding: 28px 24px;
+    border-radius: 24px;
+    padding: 32px 28px;
     color: #fff;
   }
-  .result-eligible { background: linear-gradient(135deg, #2f6f4f, #234f38); }
-  .result-review { background: linear-gradient(135deg, #b5841f, #8a611a); }
-  .result-no { background: linear-gradient(135deg, #6b7570, #4f5650); }
+  .result-eligible { background: #1d9a5c; }
+  .result-review { background: #d99a1f; }
+  .result-no { background: #c4453d; }
   .result-tag {
     display: inline-block;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .05em;
-    background: rgba(255,255,255,0.18);
-    padding: 4px 10px;
+    background: rgba(255,255,255,0.2);
+    padding: 6px 14px;
     border-radius: 999px;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
   }
-  .result-card h2 { margin: 0 0 10px; font-size: 22px; }
-  .result-card p { margin: 0 0 8px; font-size: 15px; line-height: 1.5; opacity: .95; }
+  .result-card h2 { margin: 0 0 10px; font-size: 23px; font-weight: 600; line-height: 1.25; }
+  .result-card p { margin: 0 0 8px; font-size: 15px; line-height: 1.45; opacity: .95; }
   .result-value {
-    background: rgba(255,255,255,0.14);
-    border-radius: 10px;
-    padding: 12px 14px;
+    background: rgba(255,255,255,0.16);
+    border-radius: 12px;
+    padding: 13px 16px;
     margin: 14px 0;
     font-size: 15px;
   }
   .lead-box {
-    background: #fff;
-    border-radius: 14px;
+    background: var(--card);
+    border: 1.5px solid rgba(255,255,255,0.12);
+    border-radius: 16px;
     padding: 20px;
     margin-top: 16px;
     color: var(--ink);
   }
   .lead-box .lead-title {
-    font-weight: 700;
-    font-size: 15px;
-    margin-bottom: 10px;
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 12px;
   }
   .restart-btn {
     margin-top: 14px;
     background: transparent;
-    border: 1.5px solid rgba(255,255,255,0.5);
+    border: 1.5px solid rgba(255,255,255,0.4);
     color: #fff;
-    border-radius: 10px;
-    padding: 10px 16px;
-    font-size: 14px;
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-family: var(--font);
+    font-size: 15px;
     cursor: pointer;
     width: 100%;
   }
-  .debug-panel {
-    margin-top: 18px;
-    font-size: 12px;
-    color: var(--muted);
-    background: #fbfbf9;
-    border: 1px dashed var(--border);
-    border-radius: 10px;
-    padding: 10px 12px;
-    max-height: 160px;
-    overflow-y: auto;
-  }
-  .debug-panel summary { cursor: pointer; font-weight: 600; color: var(--ink); }
-  .debug-panel pre { white-space: pre-wrap; margin: 8px 0 0; }
-  .pill-group { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
-  .pill {
+  .summary-panel {
+    margin-top: 22px;
+    background: var(--card);
     border: 1.5px solid var(--border);
-    border-radius: 999px;
-    padding: 8px 14px;
-    font-size: 14px;
-    cursor: pointer;
-    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
   }
-  .pill.selected { border-color: var(--primary); background: #eaf4ee; font-weight: 600; }
-  .checkbox-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border: 1.5px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 14px;
-    margin-bottom: 8px;
+  .summary-panel summary {
     cursor: pointer;
-  }
-  .checkbox-row input { width: 18px; height: 18px; }
-  .info-box {
-    background: #f3f8f5;
-    border-left: 3px solid var(--primary);
-    border-radius: 8px;
-    padding: 12px 14px;
+    font-weight: 600;
     font-size: 14px;
     color: var(--ink);
-    margin-bottom: 16px;
+    padding: 14px 16px;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .summary-panel summary::-webkit-details-marker { display: none; }
+  .summary-panel summary::before {
+    content: "▸";
+    color: var(--primary);
+    font-size: 12px;
+    transition: transform .15s;
+  }
+  .summary-panel[open] summary::before { transform: rotate(90deg); }
+  .summary-body {
+    padding: 4px 18px 18px;
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--ink);
+  }
+  .summary-body p { margin: 0 0 8px; }
+  .summary-body .summary-empty { color: var(--muted); }
+  .info-box {
+    background: var(--card-2);
+    border-left: 3px solid var(--primary);
+    border-radius: 12px;
+    padding: 18px 20px;
+    font-size: 16px;
+    line-height: 1.45;
+    color: var(--ink);
+    margin-bottom: 22px;
+  }
+  @media (max-width: 480px) {
+    .options.options-triple { grid-template-columns: 1fr; }
+    h1.question { font-size: 25px; }
+    .card, .result-card { padding: 28px 22px; }
+  }
+  @media (max-width: 360px) {
+    .options { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
-<div class="app" id="app"></div>
+<div class="site-header">
+  <div class="site-header-inner">
+    <h2>GuiaPrev</h2>
+    <span class="version">v. 2026.001</span>
+  </div>
+</div>
+<div class="page-wrap">
+  <div class="app" id="app"></div>
+</div>
 
 <script>
 /* =========================================================
@@ -267,10 +384,28 @@ function saveState(state) {
 function resetState() {
   sessionStorage.removeItem(STORAGE_KEY);
   state = loadState();
+  // recomeça também o histórico do navegador, para não acumular páginas antigas
+  history.replaceState({ stepStack: state.history.slice() }, "");
   render();
 }
 
 let state = loadState();
+
+// ---------- integração com o histórico do navegador ----------
+// cada avanço empilha uma entrada real no browser (pushState), guardando uma
+// CÓPIA COMPLETA da pilha de telas (stepStack) naquele ponto. Assim, tanto
+// voltar quanto avançar pelo botão do navegador apenas restauram o snapshot
+// salvo, sem precisar reconstruir nada.
+if (!history.state) {
+  history.replaceState({ stepStack: state.history.slice() }, "");
+}
+
+window.addEventListener("popstate", (event) => {
+  const stack = event.state && event.state.stepStack ? event.state.stepStack : ["start"];
+  state.history = stack.slice();
+  saveState(state);
+  render();
+});
 
 function currentStep() {
   return state.history[state.history.length - 1];
@@ -281,13 +416,14 @@ function goTo(stepId, answerKey, answerValue) {
   }
   state.history.push(stepId);
   saveState(state);
+  history.pushState({ stepStack: state.history.slice() }, "");
   render();
 }
 function goBack() {
   if (state.history.length > 1) {
-    state.history.pop();
-    saveState(state);
-    render();
+    // aciona o histórico real do navegador; o ajuste de state.history
+    // acontece no listener de popstate, mantendo as duas fontes sincronizadas
+    history.back();
   }
 }
 
@@ -304,10 +440,41 @@ const LIMITE_BPC_PERCAPITA = 405.25;
 // cada step: { eyebrow, question, hint?, render(state) -> retorna node de opções }
 // usamos uma função renderStep(stepId) que devolve o HTML da pergunta atual
 
-function optionButton(label, onClick) {
+// ---------- ícones monocromáticos (outline, herdam currentColor) ----------
+const ICONS = {
+  female: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="M12 15v7"/><path d="M8.5 19h7"/></svg>`,
+  male: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="14" r="6"/><path d="M14.5 9.5L20 4"/><path d="M15 4h5v5"/></svg>`,
+  clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`,
+  tractor: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/><path d="M9 17.5h6"/><path d="M5 11l1-6h5l1 4h4a2 2 0 0 1 2 2v3"/><path d="M11 9V5"/></svg>`,
+  flask: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6"/><path d="M10 3v6l-5.5 9.5A1.5 1.5 0 0 0 5.8 21h12.4a1.5 1.5 0 0 0 1.3-2.5L14 9V3"/><path d="M8.5 14h7"/></svg>`,
+  help: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7"/><path d="M12 17h.01"/></svg>`,
+  pulse: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 7 4-14 2 7h6"/></svg>`,
+  family: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2 21v-2a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v2"/><path d="M15 14.2a4 4 0 0 1 6 3.3V19"/></svg>`,
+  coins: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="9" cy="7" rx="6" ry="3.5"/><path d="M3 7v5c0 1.9 2.7 3.5 6 3.5s6-1.6 6-3.5V7"/><path d="M3 12v5c0 1.9 2.7 3.5 6 3.5 2.2 0 4.1-.6 5.2-1.6"/><path d="M15 9c2.8.3 5 1.7 5 3.5S17.8 16 15 16.2"/></svg>`,
+  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>`,
+  cross: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>`,
+  calendar: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M16 3v4M8 3v4M3.5 10h17"/></svg>`,
+  bolt: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>`,
+  heart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-9.5-9C1 7.8 2.6 4.5 6 4c2-.3 3.7.6 6 3 2.3-2.4 4-3.3 6-3 3.4.5 5 3.8 3.5 7C19 15.6 12 20 12 20z"/></svg>`,
+  briefcase: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7.5" width="18" height="12" rx="2"/><path d="M8 7.5V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1.5"/><path d="M3 12.5h18"/></svg>`,
+  shieldOff: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" opacity="0.35"/><path d="M9 9l6 6M15 9l-6 6"/></svg>`,
+  ban: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M6.5 6.5l11 11"/></svg>`,
+  scale: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M5 7L2.5 13a2.5 2.5 0 0 0 5 0L5 7z"/><path d="M19 7l-2.5 6a2.5 2.5 0 0 0 5 0L19 7z"/></svg>`,
+  baby: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="3.5"/><path d="M5.5 19c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/></svg>`,
+  users: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20v-1a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v1"/><circle cx="17.5" cy="9" r="2.3"/><path d="M16 13.5c2.6.4 4.5 1.9 4.5 4v1"/></svg>`,
+  alert: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17h.01"/></svg>`,
+  ring: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="16" r="4.5"/><path d="M9.5 12L8 5l4-2 4 2-1.5 7"/></svg>`,
+  unknown: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7"/><path d="M12 17h.01"/></svg>`,
+  home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7"/><path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9"/></svg>`,
+  pill: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(-35 12 12)"/><path d="M12 12l3.5-3.5" transform="rotate(-35 12 12)"/></svg>`,
+};
+
+function optionButton(label, onClick, iconKey) {
   const btn = document.createElement("button");
   btn.className = "opt-btn";
-  btn.textContent = label;
+  btn.type = "button";
+  const iconHtml = iconKey && ICONS[iconKey] ? `<span class="opt-icon">${ICONS[iconKey]}</span>` : "";
+  btn.innerHTML = `${iconHtml}<span class="opt-label">${label}</span>`;
   btn.onclick = onClick;
   return btn;
 }
@@ -316,15 +483,22 @@ function buildOptionsScreen(container, eyebrow, question, hint, options) {
   container.innerHTML = "";
   const card = document.createElement("div");
   card.className = "card";
+  // decide automaticamente o layout: opções curtas (ex: Sim/Não, Mulher/Homem)
+  // cabem bem em grid quadrado; opções com frases longas ficam melhor em lista larga;
+  // exatamente 3 opções curtas usam 3 colunas, para não deixar um card sozinho na 2ª linha
+  const avgLen = options.reduce((sum, o) => sum + o.label.length, 0) / options.length;
+  const isWide = avgLen > 22 || options.length > 4;
+  const isTriple = !isWide && options.length === 3;
+  const layoutClass = isWide ? " options-wide" : isTriple ? " options-triple" : "";
   card.innerHTML = `
     <div class="eyebrow">${eyebrow}</div>
     <h1 class="question">${question}</h1>
     ${hint ? `<p class="hint">${hint}</p>` : ""}
-    <div class="options"></div>
+    <div class="options${layoutClass}"></div>
   `;
   const optsWrap = card.querySelector(".options");
   options.forEach(opt => {
-    optsWrap.appendChild(optionButton(opt.label, opt.onClick));
+    optsWrap.appendChild(optionButton(opt.label, opt.onClick, opt.icon));
   });
   container.appendChild(card);
 }
@@ -333,11 +507,12 @@ function buildNumberScreen(container, eyebrow, question, hint, key, nextStepFn, 
   container.innerHTML = "";
   const card = document.createElement("div");
   card.className = "card";
+  const heroClass = opts.hero ? " input-hero" : "";
   card.innerHTML = `
     <div class="eyebrow">${eyebrow}</div>
     <h1 class="question">${question}</h1>
     ${hint ? `<p class="hint">${hint}</p>` : ""}
-    <input type="${opts.type || 'number'}" id="numInput" placeholder="${opts.placeholder || ''}" value="${state.answers[key] ?? ''}">
+    <input type="${opts.type || 'number'}" class="${heroClass.trim()}" id="numInput" placeholder="${opts.placeholder || ''}" value="${state.answers[key] ?? ''}">
     <button class="next-btn" id="nextBtn">Continuar</button>
   `;
   container.appendChild(card);
@@ -410,11 +585,11 @@ const steps = {};
 
 // ---- TELA 1: entrada geral ----
 steps["start"] = (c) => {
-  buildOptionsScreen(c, "Passo 1 de N", "Qual situação melhor descreve o que você está buscando?", null, [
-    { label: "Quero me aposentar", onClick: () => goTo("r1_p1", "situacao", "aposentadoria") },
-    { label: "Estou doente/me machuquei e não consigo trabalhar", onClick: () => goTo("r23_p1", "situacao", "incapacidade") },
-    { label: "Um familiar faleceu e preciso saber se tenho direito a pensão", onClick: () => goTo("r4_p1", "situacao", "pensao") },
-    { label: "Sou idoso ou tenho deficiência e tenho pouca renda", onClick: () => goTo("r5_p1", "situacao", "bpc") },
+  buildOptionsScreen(c, "Início", "O que você precisa hoje?", null, [
+    { label: "Quero me aposentar", icon: "clock", onClick: () => goTo("r1_p1", "situacao", "aposentadoria") },
+    { label: "Estou doente ou me acidentei", icon: "pulse", onClick: () => goTo("r23_p1", "situacao", "incapacidade") },
+    { label: "Um familiar faleceu", icon: "heart", onClick: () => goTo("r4_p1", "situacao", "pensao") },
+    { label: "Sou idoso ou tenho deficiência, com baixa renda", icon: "coins", onClick: () => goTo("r5_p1", "situacao", "bpc") },
   ]);
 };
 
@@ -423,18 +598,18 @@ steps["start"] = (c) => {
 // =========================================
 
 steps["r1_p1"] = (c) => {
-  buildOptionsScreen(c, "Aposentadoria · 1/6", "Qual é a sua situação em relação ao trabalho?", null, [
-    { label: "Já contribuí (ou meu empregador contribuiu) para o INSS por muitos anos", onClick: () => goTo("r1a_idade", "r1_tipo", "urbana") },
-    { label: "Trabalhei a vida toda na roça/lavoura (rural), com pouca ou nenhuma contribuição formal", onClick: () => goTo("r1b_rural_tempo", "r1_tipo", "rural") },
-    { label: "Trabalhei exposto a algo que prejudica a saúde (poeira, químicos, ruído, eletricidade, etc.)", onClick: () => goTo("r1c_risco", "r1_tipo", "especial") },
-    { label: "Não tenho certeza de quanto tempo contribuí", onClick: () => goTo("r1_naosei_info", "r1_tipo", "naosei") },
+  buildOptionsScreen(c, "Aposentadoria · 1/6", "Como foi seu trabalho?", null, [
+    { label: "Contribuí para o INSS por muitos anos", icon: "briefcase", onClick: () => goTo("r1a_idade", "r1_tipo", "urbana") },
+    { label: "Trabalhei na roça, com pouca ou nenhuma carteira assinada", icon: "tractor", onClick: () => goTo("r1b_rural_tempo", "r1_tipo", "rural") },
+    { label: "Trabalhei exposto a algo que prejudica a saúde", icon: "flask", onClick: () => goTo("r1c_risco", "r1_tipo", "especial") },
+    { label: "Não tenho certeza do meu tempo de contribuição", icon: "help", onClick: () => goTo("r1_naosei_info", "r1_tipo", "naosei") },
   ]);
 };
 
 steps["r1_naosei_info"] = (c) => {
   buildInfoScreen(c, "Aposentadoria",
     "Sem problemas, vamos estimar",
-    "Vamos calcular com base na sua idade e situação. Depois, um advogado confirma os dados exatos consultando seu CNIS (extrato do INSS).",
+    "Calculamos com base na sua idade e situação. Depois, um advogado confirma os dados no seu CNIS (extrato do INSS).",
     "Continuar",
     () => goTo("r1a_idade", "r1_tipo_efetivo", "urbana")
   );
@@ -442,33 +617,33 @@ steps["r1_naosei_info"] = (c) => {
 
 steps["r1a_idade"] = (c) => {
   buildNumberScreen(c, "Aposentadoria · 2/6", "Qual sua idade hoje?", null, "r1_idade",
-    (val) => goTo("r1a_sexo", "r1_idade", val)
+    (val) => goTo("r1a_sexo", "r1_idade", val), { hero: true }
   );
 };
 
 steps["r1a_sexo"] = (c) => {
   buildOptionsScreen(c, "Aposentadoria · 3/6", "Você é homem ou mulher?",
-    "Perguntamos porque a lei prevê idades e tempos mínimos diferentes por sexo.", [
-    { label: "Mulher", onClick: () => goTo("r1a_tempo_contrib", "r1_sexo", "F") },
-    { label: "Homem", onClick: () => goTo("r1a_tempo_contrib", "r1_sexo", "M") },
+    "A lei prevê idades e tempos mínimos diferentes por sexo.", [
+    { label: "Mulher", icon: "female", onClick: () => goTo("r1a_tempo_contrib", "r1_sexo", "F") },
+    { label: "Homem", icon: "male", onClick: () => goTo("r1a_tempo_contrib", "r1_sexo", "M") },
   ]);
 };
 
 steps["r1a_tempo_contrib"] = (c) => {
   buildNumberScreen(c, "Aposentadoria · 4/6",
-    "Há quantos anos, aproximadamente, você contribui ou contribuiu para o INSS?",
-    "Some todos os empregos e períodos, mesmo que não tenham sido contínuos.",
+    "Há quantos anos você contribui ao INSS?",
+    "Some todos os empregos e períodos, mesmo sem continuidade.",
     "r1_tempo_contrib",
-    (val) => goTo("r1a_antes_2019", "r1_tempo_contrib", val)
+    (val) => goTo("r1a_antes_2019", "r1_tempo_contrib", val), { hero: true }
   );
 };
 
 steps["r1a_antes_2019"] = (c) => {
-  buildOptionsScreen(c, "Aposentadoria · 5/6", "Você começou a contribuir para o INSS antes de 13/11/2019?",
-    "Essa é a data da Reforma da Previdência — ela define quais regras você pode usar.", [
-    { label: "Sim", onClick: () => goTo("r1a_resultado", "r1_antes_2019", "sim") },
-    { label: "Não", onClick: () => goTo("r1a_resultado", "r1_antes_2019", "nao") },
-    { label: "Não sei", onClick: () => goTo("r1a_resultado", "r1_antes_2019", "naosei") },
+  buildOptionsScreen(c, "Aposentadoria · 5/6", "Começou a contribuir antes de 13/11/2019?",
+    "Essa é a data da Reforma da Previdência.", [
+    { label: "Sim", icon: "check", onClick: () => goTo("r1a_resultado", "r1_antes_2019", "sim") },
+    { label: "Não", icon: "cross", onClick: () => goTo("r1a_resultado", "r1_antes_2019", "nao") },
+    { label: "Não sei", icon: "help", onClick: () => goTo("r1a_resultado", "r1_antes_2019", "naosei") },
   ]);
 };
 
@@ -502,11 +677,11 @@ steps["r1a_resultado"] = (c) => {
     buildResultScreen(c, "eligible",
       "Você provavelmente já pode se aposentar",
       [
-        "Com base nas respostas, você atende a pelo menos uma regra de aposentadoria:",
+        "Você já atende a uma regra de aposentadoria:",
         "• " + regrasOk.join("<br>• "),
-        "A regra mais vantajosa em valor (não só em data) depende de um cálculo comparativo, que um advogado pode fazer com seu CNIS."
+        "Um advogado pode calcular qual regra te dá o melhor valor."
       ],
-      "Estimativa: entre 60% e 100% da média salarial, respeitando piso de " + fmtMoney(SALARIO_MIN) + " e teto de " + fmtMoney(TETO_INSS) + "."
+      "Estimativa: 60% a 100% da média salarial (piso " + fmtMoney(SALARIO_MIN) + ", teto " + fmtMoney(TETO_INSS) + ")."
     );
   } else {
     // quão perto está (heurística simples para o protótipo)
@@ -520,9 +695,8 @@ steps["r1a_resultado"] = (c) => {
       buildResultScreen(c, "review",
         "Você está perto de se aposentar",
         [
-          "Ainda não atende a nenhuma regra hoje, mas está próximo.",
-          faltaIdadePermanente > 0 ? `Faltam aproximadamente ${faltaIdadePermanente} anos para a idade mínima da regra permanente.` : "",
-          faltaTempoPermanente > 0 ? `Faltam aproximadamente ${faltaTempoPermanente} anos de contribuição para a regra permanente.` : "",
+          faltaIdadePermanente > 0 ? `Faltam cerca de ${faltaIdadePermanente} anos de idade.` : "",
+          faltaTempoPermanente > 0 ? `Faltam cerca de ${faltaTempoPermanente} anos de contribuição.` : "",
         ].filter(Boolean),
         null
       );
@@ -530,8 +704,8 @@ steps["r1a_resultado"] = (c) => {
       buildResultScreen(c, "no",
         "Ainda não, mas vamos te avisar quando chegar a hora",
         [
-          `Pela regra permanente, faltam aproximadamente ${faltaIdadePermanente} anos de idade e/ou ${faltaTempoPermanente} anos de contribuição.`,
-          "As regras de transição podem antecipar isso — vale confirmar com um especialista."
+          `Faltam cerca de ${faltaIdadePermanente} anos de idade e/ou ${faltaTempoPermanente} anos de contribuição.`,
+          "Regras de transição podem antecipar isso."
         ],
         null
       );
@@ -542,22 +716,23 @@ steps["r1a_resultado"] = (c) => {
 // ---- 1B RURAL ----
 steps["r1b_rural_tempo"] = (c) => {
   buildOptionsScreen(c, "Aposentadoria rural · 2/4",
-    "Você trabalhou em atividade rural (lavoura, pecuária, pesca artesanal) por pelo menos 15 anos, mesmo sem carteira assinada?", null, [
-    { label: "Sim", onClick: () => goTo("r1b_idade", "r1b_tempo_ok", "sim") },
-    { label: "Não", onClick: () => goTo("r1b_idade", "r1b_tempo_ok", "nao") },
+    "Trabalhou na roça por 15 anos ou mais?",
+    "Lavoura, pecuária ou pesca artesanal, mesmo sem carteira assinada.", [
+    { label: "Sim", icon: "check", onClick: () => goTo("r1b_idade", "r1b_tempo_ok", "sim") },
+    { label: "Não", icon: "cross", onClick: () => goTo("r1b_idade", "r1b_tempo_ok", "nao") },
   ]);
 };
 
 steps["r1b_idade"] = (c) => {
   buildNumberScreen(c, "Aposentadoria rural · 3/4", "Qual sua idade?", null, "r1b_idade_val",
-    (val) => goTo("r1b_sexo", "r1b_idade_val", val)
+    (val) => goTo("r1b_sexo", "r1b_idade_val", val), { hero: true }
   );
 };
 
 steps["r1b_sexo"] = (c) => {
   buildOptionsScreen(c, "Aposentadoria rural · 4/4", "Você é homem ou mulher?", null, [
-    { label: "Mulher", onClick: () => goTo("r1b_resultado", "r1b_sexo", "F") },
-    { label: "Homem", onClick: () => goTo("r1b_resultado", "r1b_sexo", "M") },
+    { label: "Mulher", icon: "female", onClick: () => goTo("r1b_resultado", "r1b_sexo", "F") },
+    { label: "Homem", icon: "male", onClick: () => goTo("r1b_resultado", "r1b_sexo", "M") },
   ]);
 };
 
@@ -571,18 +746,18 @@ steps["r1b_resultado"] = (c) => {
     buildResultScreen(c, "eligible",
       "Você atende aos requisitos da aposentadoria rural",
       [
-        "Você cumpre idade mínima e tempo de atividade rural exigidos.",
-        "A comprovação do tempo rural (testemunhas, notas de produtor, sindicato rural etc.) será avaliada por um advogado para reunir as provas necessárias."
+        "Idade e tempo de atividade rural cumpridos.",
+        "A comprovação (testemunhas, notas, sindicato) será reunida com um advogado."
       ],
-      "Estimativa: 1 salário-mínimo (" + fmtMoney(SALARIO_MIN) + "), salvo contribuições adicionais."
+      "Estimativa: 1 salário-mínimo (" + fmtMoney(SALARIO_MIN) + ")."
     );
   } else {
     const faltaIdade = Math.max(0, idadeMin - idade);
     buildResultScreen(c, "no",
       "Ainda não atende aos requisitos rurais",
       [
-        !tempoOk ? "É necessário comprovar pelo menos 15 anos de atividade rural." : "",
-        faltaIdade > 0 ? `Faltam aproximadamente ${faltaIdade} anos para a idade mínima (${idadeMin} anos).` : ""
+        !tempoOk ? "É necessário comprovar 15+ anos de atividade rural." : "",
+        faltaIdade > 0 ? `Faltam cerca de ${faltaIdade} anos para a idade mínima (${idadeMin}).` : ""
       ].filter(Boolean),
       null
     );
@@ -592,27 +767,27 @@ steps["r1b_resultado"] = (c) => {
 // ---- 1C ESPECIAL ----
 steps["r1c_risco"] = (c) => {
   buildOptionsScreen(c, "Aposentadoria especial · 2/5",
-    "Qual desses riscos mais se aproxima do que você enfrentava no trabalho?", null, [
-    { label: "Agentes químicos perigosos, radiação ionizante, ou trabalho em minas", onClick: () => goTo("r1c_tempo", "r1c_risco_tipo", "15") },
-    { label: "Ruído acima do limite legal, calor excessivo, vibração, ou agentes biológicos (hospitais/laboratórios)", onClick: () => goTo("r1c_tempo", "r1c_risco_tipo", "20") },
-    { label: "Eletricidade de alta tensão ou periculosidade (vigilante armado, inflamáveis, explosivos)", onClick: () => goTo("r1c_tempo", "r1c_risco_tipo", "25") },
-    { label: "Não sei classificar / é uma mistura de fatores", onClick: () => goTo("r1c_tempo", "r1c_risco_tipo", "naosei") },
+    "Qual risco mais se aproxima do seu trabalho?", null, [
+    { label: "Químicos perigosos, radiação ou minas", icon: "flask", onClick: () => goTo("r1c_tempo", "r1c_risco_tipo", "15") },
+    { label: "Ruído, calor excessivo, vibração ou agentes biológicos", icon: "pulse", onClick: () => goTo("r1c_tempo", "r1c_risco_tipo", "20") },
+    { label: "Eletricidade ou periculosidade", icon: "bolt", onClick: () => goTo("r1c_tempo", "r1c_risco_tipo", "25") },
+    { label: "Não sei classificar", icon: "help", onClick: () => goTo("r1c_tempo", "r1c_risco_tipo", "naosei") },
   ]);
 };
 
 steps["r1c_tempo"] = (c) => {
   buildNumberScreen(c, "Aposentadoria especial · 3/5",
-    "Há quantos anos, no total, você trabalhou nessa condição?", null, "r1c_tempo_val",
-    (val) => goTo("r1c_antes_2019", "r1c_tempo_val", val)
+    "Quantos anos você trabalhou nessa condição?", null, "r1c_tempo_val",
+    (val) => goTo("r1c_antes_2019", "r1c_tempo_val", val), { hero: true }
   );
 };
 
 steps["r1c_antes_2019"] = (c) => {
   buildOptionsScreen(c, "Aposentadoria especial · 4/5",
-    "Você começou a trabalhar nessas condições antes de 13/11/2019?", null, [
-    { label: "Sim", onClick: () => goTo("r1c_resultado", "r1c_antes_2019", "sim") },
-    { label: "Não", onClick: () => goTo("r1c_resultado", "r1c_antes_2019", "nao") },
-    { label: "Não sei", onClick: () => goTo("r1c_resultado", "r1c_antes_2019", "naosei") },
+    "Começou nessas condições antes de 13/11/2019?", null, [
+    { label: "Sim", icon: "check", onClick: () => goTo("r1c_resultado", "r1c_antes_2019", "sim") },
+    { label: "Não", icon: "cross", onClick: () => goTo("r1c_resultado", "r1c_antes_2019", "nao") },
+    { label: "Não sei", icon: "help", onClick: () => goTo("r1c_resultado", "r1c_antes_2019", "naosei") },
   ]);
 };
 
@@ -625,7 +800,7 @@ steps["r1c_resultado"] = (c) => {
     buildResultScreen(c, "review",
       "Pode ter direito — análise necessária",
       [
-        "Como não foi possível classificar com certeza o grau de risco da sua atividade, vamos usar uma referência conservadora (25 anos) e confirmar tudo com base no seu PPP/laudo técnico.",
+        "Sem classificação clara do risco, usamos referência conservadora (25 anos). Confirmação depende do seu PPP/laudo técnico.",
       ],
       null
     );
@@ -639,8 +814,8 @@ steps["r1c_resultado"] = (c) => {
       buildResultScreen(c, "eligible",
         "Você pode ter direito à aposentadoria especial",
         [
-          `Seu tempo de exposição relatado (${tempo} anos) atinge o mínimo de ${tempoExigido} anos para esse tipo de risco.`,
-          "A confirmação final do grau de insalubridade/periculosidade depende do PPP, LTCAT ou laudo técnico — isso é uma exigência legal, não uma formalidade do nosso teste."
+          `Seu tempo de exposição (${tempo} anos) atinge o mínimo de ${tempoExigido} anos.`,
+          "Confirmação final depende de PPP, LTCAT ou laudo técnico."
         ],
         null
       );
@@ -648,8 +823,8 @@ steps["r1c_resultado"] = (c) => {
       buildResultScreen(c, "review",
         "Tempo OK, mas pode faltar idade mínima",
         [
-          "Como você começou a trabalhar nessas condições depois de 13/11/2019, a regra exige também uma idade mínima (55 a 60 anos, conforme o grau de risco), além do tempo de exposição.",
-          "Um advogado pode confirmar se você já atinge a idade mínima aplicável ao seu caso."
+          "Quem começou depois de 13/11/2019 também precisa de idade mínima (55 a 60 anos).",
+          "Um advogado confirma se você já atinge esse requisito."
         ],
         null
       );
@@ -658,7 +833,7 @@ steps["r1c_resultado"] = (c) => {
     buildResultScreen(c, "no",
       "Ainda não atinge o tempo mínimo nessa condição",
       [
-        `Faltam aproximadamente ${tempoExigido - tempo} anos de exposição para atingir o mínimo de ${tempoExigido} anos.`
+        `Faltam cerca de ${tempoExigido - tempo} anos de exposição.`
       ],
       null
     );
@@ -670,19 +845,19 @@ steps["r1c_resultado"] = (c) => {
 // =========================================
 
 steps["r23_p1"] = (c) => {
-  buildOptionsScreen(c, "Incapacidade · 1/5", "Há quanto tempo você está impossibilitado de trabalhar por causa de doença ou acidente?", null, [
-    { label: "Menos de 15 dias", onClick: () => goTo("r23_menos15", "r23_duracao", "menos15") },
-    { label: "Entre 15 dias e alguns meses", onClick: () => goTo("r23_vinculo", "r23_duracao", "media") },
-    { label: "Já dura muito tempo e parece estar virando algo permanente", onClick: () => goTo("r23_vinculo", "r23_duracao", "permanente") },
+  buildOptionsScreen(c, "Incapacidade · 1/5", "Há quanto tempo você não pode trabalhar?", null, [
+    { label: "Menos de 15 dias", icon: "calendar", onClick: () => goTo("r23_menos15", "r23_duracao", "menos15") },
+    { label: "Entre 15 dias e alguns meses", icon: "clock", onClick: () => goTo("r23_vinculo", "r23_duracao", "media") },
+    { label: "Já dura muito tempo, parece permanente", icon: "alert", onClick: () => goTo("r23_vinculo", "r23_duracao", "permanente") },
   ]);
 };
 
 steps["r23_menos15"] = (c) => {
   buildResultScreen(c, "no",
-    "Ainda não dá direito ao benefício do INSS",
+    "Ainda não dá direito ao benefício",
     [
-      "Os primeiros 15 dias, para quem tem carteira assinada, são responsabilidade do empregador.",
-      "O INSS só entra a partir do 16º dia de afastamento. Se o afastamento continuar, volte aqui para reavaliar."
+      "Os 15 primeiros dias são por conta do empregador.",
+      "O INSS só entra a partir do 16º dia."
     ],
     null
   );
@@ -690,10 +865,10 @@ steps["r23_menos15"] = (c) => {
 
 steps["r23_vinculo"] = (c) => {
   buildOptionsScreen(c, "Incapacidade · 2/5",
-    "Você já tinha vínculo com o INSS quando ficou doente/se acidentou, ou parou de contribuir há pouco tempo?", null, [
-    { label: "Sim, estava trabalhando/contribuindo", onClick: () => goTo("r23_tempo_contrib", "r23_vinculo", "ativo") },
-    { label: "Parei de contribuir há mais de 1 ano", onClick: () => goTo("r23_periodo_graca", "r23_vinculo", "parado") },
-    { label: "Nunca contribuí", onClick: () => goTo("r23_sem_segurado", "r23_vinculo", "nunca") },
+    "Você tinha vínculo com o INSS quando ficou doente?", null, [
+    { label: "Sim, estava contribuindo", icon: "check", onClick: () => goTo("r23_tempo_contrib", "r23_vinculo", "ativo") },
+    { label: "Parei há mais de 1 ano", icon: "clock", onClick: () => goTo("r23_periodo_graca", "r23_vinculo", "parado") },
+    { label: "Nunca contribuí", icon: "ban", onClick: () => goTo("r23_sem_segurado", "r23_vinculo", "nunca") },
   ]);
 };
 
@@ -702,7 +877,7 @@ steps["r23_sem_segurado"] = (c) => {
     "Sem qualidade de segurado",
     [
       "Sem contribuição ao INSS, não há acesso a esse benefício.",
-      "Se você (ou a pessoa em questão) tem baixa renda e é idoso ou tem deficiência, vale avaliar o BPC/LOAS — um benefício diferente, que não depende de contribuição."
+      "Avalie o BPC/LOAS, que não depende de contribuição."
     ],
     null
   );
@@ -710,19 +885,19 @@ steps["r23_sem_segurado"] = (c) => {
 
 steps["r23_periodo_graca"] = (c) => {
   buildOptionsScreen(c, "Incapacidade · 3/5",
-    "Você ficou desempregado e tinha mais de 10 anos de contribuição, ou tem filho pequeno, ou está preso?",
-    "Essas situações estendem o chamado 'período de graça', em que você continua coberto mesmo sem contribuir.", [
-    { label: "Sim, alguma dessas situações", onClick: () => goTo("r23_tempo_contrib", "r23_periodo_graca_estendido", "sim") },
-    { label: "Não", onClick: () => goTo("r23_resultado_incerto", "r23_periodo_graca_estendido", "nao") },
+    "Alguma dessas situações é sua?",
+    "Desemprego com 10+ anos de contribuição, filho pequeno, ou estar preso.", [
+    { label: "Sim, uma dessas situações", icon: "check", onClick: () => goTo("r23_tempo_contrib", "r23_periodo_graca_estendido", "sim") },
+    { label: "Não", icon: "cross", onClick: () => goTo("r23_resultado_incerto", "r23_periodo_graca_estendido", "nao") },
   ]);
 };
 
 steps["r23_resultado_incerto"] = (c) => {
   buildResultScreen(c, "review",
-    "Provavelmente perdeu a qualidade de segurado, mas vale confirmar",
+    "Provavelmente perdeu a cobertura, mas vale confirmar",
     [
-      "Com base no que foi informado, é provável que o período de graça já tenha terminado.",
-      "Ainda assim, vale confirmar com um advogado — existem detalhes do seu histórico contributivo que podem mudar esse resultado."
+      "O período de graça pode já ter terminado.",
+      "Detalhes do seu histórico podem mudar esse resultado."
     ],
     null
   );
@@ -730,31 +905,32 @@ steps["r23_resultado_incerto"] = (c) => {
 
 steps["r23_tempo_contrib"] = (c) => {
   buildOptionsScreen(c, "Incapacidade · 4/5",
-    "Há quanto tempo você contribui (somando todos os períodos)?", null, [
-    { label: "Menos de 12 meses", onClick: () => goTo("r23_causa", "r23_tempo_contrib", "menos12") },
-    { label: "12 meses ou mais", onClick: () => goTo("r23_causa", "r23_tempo_contrib", "mais12") },
-    { label: "Não sei", onClick: () => goTo("r23_causa", "r23_tempo_contrib", "naosei") },
+    "Há quanto tempo você contribui?", null, [
+    { label: "Menos de 12 meses", icon: "calendar", onClick: () => goTo("r23_causa", "r23_tempo_contrib", "menos12") },
+    { label: "12 meses ou mais", icon: "calendar", onClick: () => goTo("r23_causa", "r23_tempo_contrib", "mais12") },
+    { label: "Não sei", icon: "help", onClick: () => goTo("r23_causa", "r23_tempo_contrib", "naosei") },
   ]);
 };
 
 steps["r23_causa"] = (c) => {
   buildOptionsScreen(c, "Incapacidade · 5/5",
-    "A causa do afastamento é algum desses casos?",
-    "Essas situações dispensam a exigência de 12 meses de contribuição.", [
-    { label: "Acidente de trabalho ou de qualquer natureza", onClick: () => goTo("r23_permanencia", "r23_causa", "acidente") },
-    { label: "Doença grave da lista do INSS (câncer, HIV/AIDS, cardiopatia grave etc.)", onClick: () => goTo("r23_permanencia", "r23_causa", "grave") },
-    { label: "Doença profissional/ocupacional", onClick: () => goTo("r23_permanencia", "r23_causa", "ocupacional") },
-    { label: "Nenhuma dessas — é uma doença comum", onClick: () => goTo("r23_permanencia", "r23_causa", "comum") },
+    "Qual a causa do afastamento?",
+    "Esses casos dispensam a exigência de 12 meses de contribuição.", [
+    { label: "Acidente, de qualquer natureza", icon: "alert", onClick: () => goTo("r23_permanencia", "r23_causa", "acidente") },
+    { label: "Doença grave da lista do INSS", icon: "pill", onClick: () => goTo("r23_permanencia", "r23_causa", "grave") },
+    { label: "Doença profissional ou ocupacional", icon: "briefcase", onClick: () => goTo("r23_permanencia", "r23_causa", "ocupacional") },
+    { label: "Nenhuma — é uma doença comum", icon: "pulse", onClick: () => goTo("r23_permanencia", "r23_causa", "comum") },
   ]);
 };
 
 steps["r23_permanencia"] = (c) => {
   // pergunta extra para diferenciar Ramo 2 (temporária) de Ramo 3 (permanente)
   buildOptionsScreen(c, "Incapacidade · extra",
-    "Um médico já disse que sua incapacidade é permanente (sem chance de reabilitação ou retorno à função)?", null, [
-    { label: "Sim, é permanente", onClick: () => goTo("r3_relacao_trabalho", "r23_permanente", "sim") },
-    { label: "Ainda em tratamento, não sei se será permanente", onClick: () => goTo("r3_relacao_trabalho", "r23_permanente", "incerto") },
-    { label: "Não, é temporário", onClick: () => goTo("r2_resultado", "r23_permanente", "nao") },
+    "Um médico já disse que é permanente?",
+    "Sem chance de reabilitação ou retorno à função.", [
+    { label: "Sim, é permanente", icon: "check", onClick: () => goTo("r3_relacao_trabalho", "r23_permanente", "sim") },
+    { label: "Ainda em tratamento, não sei", icon: "help", onClick: () => goTo("r3_relacao_trabalho", "r23_permanente", "incerto") },
+    { label: "Não, é temporário", icon: "cross", onClick: () => goTo("r2_resultado", "r23_permanente", "nao") },
   ]);
 };
 
@@ -768,21 +944,21 @@ steps["r2_resultado"] = (c) => {
     buildResultScreen(c, "eligible",
       "Você atende aos requisitos do auxílio-doença",
       [
-        "Qualidade de segurado e carência atendidas (ou dispensadas pela causa do afastamento).",
-        "Atendendo aos requisitos administrativos, o próximo passo é a perícia médica do INSS."
+        "Qualidade de segurado e carência atendidas.",
+        "Próximo passo: perícia médica do INSS."
       ],
-      "Estimativa: 91% do salário de benefício, entre " + fmtMoney(SALARIO_MIN) + " e " + fmtMoney(TETO_INSS) + "."
+      "Estimativa: 91% do salário de benefício (" + fmtMoney(SALARIO_MIN) + " a " + fmtMoney(TETO_INSS) + ")."
     );
   } else if (tempoContrib === "naosei") {
     buildResultScreen(c, "review",
       "Pode ter direito — confirme seu tempo de contribuição",
-      ["Não foi possível confirmar a carência de 12 meses. Um advogado pode checar isso no seu CNIS."],
+      ["Não foi possível confirmar a carência de 12 meses. Um advogado pode checar no seu CNIS."],
       null
     );
   } else {
     buildResultScreen(c, "no",
       "Ainda não cumpre a carência mínima",
-      ["São necessários pelo menos 12 meses de contribuição, exceto nos casos de acidente, doença grave ou ocupacional."],
+      ["São necessários 12 meses de contribuição, salvo acidente, doença grave ou ocupacional."],
       null
     );
   }
@@ -790,19 +966,20 @@ steps["r2_resultado"] = (c) => {
 
 steps["r3_relacao_trabalho"] = (c) => {
   buildOptionsScreen(c, "Incapacidade permanente · extra",
-    "A incapacidade tem relação direta com acidente de trabalho ou doença ocupacional?",
-    "Isso não muda se você tem direito, mas muda o valor do benefício.", [
-    { label: "Sim", onClick: () => goTo("r3_ajuda_terceiros", "r23_relacao_trabalho", "sim") },
-    { label: "Não", onClick: () => goTo("r3_ajuda_terceiros", "r23_relacao_trabalho", "nao") },
-    { label: "Não sei", onClick: () => goTo("r3_ajuda_terceiros", "r23_relacao_trabalho", "naosei") },
+    "Tem relação com acidente ou doença ocupacional?",
+    "Não muda se você tem direito, mas muda o valor do benefício.", [
+    { label: "Sim", icon: "check", onClick: () => goTo("r3_ajuda_terceiros", "r23_relacao_trabalho", "sim") },
+    { label: "Não", icon: "cross", onClick: () => goTo("r3_ajuda_terceiros", "r23_relacao_trabalho", "nao") },
+    { label: "Não sei", icon: "help", onClick: () => goTo("r3_ajuda_terceiros", "r23_relacao_trabalho", "naosei") },
   ]);
 };
 
 steps["r3_ajuda_terceiros"] = (c) => {
   buildOptionsScreen(c, "Incapacidade permanente · extra",
-    "Você precisa de ajuda de outra pessoa para atividades básicas do dia a dia (comer, se vestir, se locomover)?", null, [
-    { label: "Sim", onClick: () => goTo("r3_resultado", "r23_ajuda_terceiros", "sim") },
-    { label: "Não", onClick: () => goTo("r3_resultado", "r23_ajuda_terceiros", "nao") },
+    "Precisa de ajuda para o dia a dia?",
+    "Comer, se vestir ou se locomover.", [
+    { label: "Sim", icon: "check", onClick: () => goTo("r3_resultado", "r23_ajuda_terceiros", "sim") },
+    { label: "Não", icon: "cross", onClick: () => goTo("r3_resultado", "r23_ajuda_terceiros", "nao") },
   ]);
 };
 
@@ -816,13 +993,13 @@ steps["r3_resultado"] = (c) => {
   const ajuda25 = state.answers.r23_ajuda_terceiros === "sim";
 
   const valorTexto = relacaoTrabalho
-    ? "Estimativa: 100% da média salarial" + (ajuda25 ? " + 25% de adicional (grande invalidez)." : ".")
-    : "Estimativa: 60% da média salarial + 2% por ano de contribuição excedente (20 anos homem / 15 mulher)" + (ajuda25 ? ", + 25% de adicional (grande invalidez)." : ".");
+    ? "Estimativa: 100% da média salarial" + (ajuda25 ? " + 25% (grande invalidez)." : ".")
+    : "Estimativa: 60% da média + 2%/ano excedente" + (ajuda25 ? " + 25% (grande invalidez)." : ".");
 
   if (!carenciaOk) {
     buildResultScreen(c, "no",
       "Ainda não cumpre a carência mínima",
-      ["São necessários pelo menos 12 meses de contribuição, exceto nos casos de acidente, doença grave ou ocupacional."],
+      ["São necessários 12 meses de contribuição, salvo acidente, doença grave ou ocupacional."],
       null
     );
     return;
@@ -831,13 +1008,13 @@ steps["r3_resultado"] = (c) => {
   if (permanente === "incerto") {
     buildResultScreen(c, "review",
       "Pode ter direito — depende da perícia médica",
-      ["A perícia médica do INSS é quem decide se a incapacidade é definitiva. Os requisitos administrativos (segurado + carência) já parecem atendidos."],
+      ["A perícia decide se a incapacidade é definitiva. Requisitos administrativos já parecem atendidos."],
       valorTexto
     );
   } else {
     buildResultScreen(c, "eligible",
       "Você atende aos requisitos da aposentadoria por incapacidade permanente",
-      ["Qualidade de segurado e carência atendidas (ou dispensadas pela causa). A perícia médica confirma a incapacidade total e permanente."],
+      ["Segurado e carência atendidos. A perícia confirma a incapacidade total e permanente."],
       valorTexto
     );
   }
@@ -848,29 +1025,30 @@ steps["r3_resultado"] = (c) => {
 // =========================================
 
 steps["r4_p1"] = (c) => {
-  buildOptionsScreen(c, "Pensão por morte · 1/6", "Qual é o seu parentesco com a pessoa que faleceu?", null, [
-    { label: "Cônjuge ou companheiro(a)", onClick: () => goTo("r4_segurado", "r4_parentesco", "conjuge") },
-    { label: "Filho(a) ou enteado(a)", onClick: () => goTo("r4_segurado", "r4_parentesco", "filho") },
-    { label: "Pai/mãe (dependência econômica)", onClick: () => goTo("r4_segurado", "r4_parentesco", "pais") },
-    { label: "Irmão/irmã (dependência econômica)", onClick: () => goTo("r4_segurado", "r4_parentesco", "irmao") },
+  buildOptionsScreen(c, "Pensão por morte · 1/6", "Qual seu parentesco com quem faleceu?", null, [
+    { label: "Cônjuge ou companheiro(a)", icon: "ring", onClick: () => goTo("r4_segurado", "r4_parentesco", "conjuge") },
+    { label: "Filho(a) ou enteado(a)", icon: "baby", onClick: () => goTo("r4_segurado", "r4_parentesco", "filho") },
+    { label: "Pai ou mãe", icon: "family", onClick: () => goTo("r4_segurado", "r4_parentesco", "pais") },
+    { label: "Irmão ou irmã", icon: "users", onClick: () => goTo("r4_segurado", "r4_parentesco", "irmao") },
   ]);
 };
 
 steps["r4_segurado"] = (c) => {
   buildOptionsScreen(c, "Pensão por morte · 2/6",
-    "A pessoa falecida era segurada do INSS (contribuía, era aposentada, ou recebia algum benefício) no momento da morte, ou tinha parado de contribuir há pouco tempo?", null, [
-    { label: "Sim, contribuía ou era aposentada", onClick: () => goTo("r4_contribuicoes", "r4_segurado", "ativo") },
-    { label: "Tinha parado há pouco tempo (período de graça)", onClick: () => goTo("r4_contribuicoes", "r4_segurado", "graca") },
-    { label: "Não contribuía há muito tempo / nunca contribuiu", onClick: () => goTo("r4_sem_segurado", "r4_segurado", "nunca") },
+    "A pessoa era segurada do INSS?",
+    "Contribuía, era aposentada, ou recebia algum benefício — ou parou há pouco tempo.", [
+    { label: "Sim, contribuía ou era aposentada", icon: "check", onClick: () => goTo("r4_contribuicoes", "r4_segurado", "ativo") },
+    { label: "Tinha parado há pouco tempo", icon: "clock", onClick: () => goTo("r4_contribuicoes", "r4_segurado", "graca") },
+    { label: "Não contribuía há muito tempo", icon: "ban", onClick: () => goTo("r4_sem_segurado", "r4_segurado", "nunca") },
   ]);
 };
 
 steps["r4_sem_segurado"] = (c) => {
   buildResultScreen(c, "no",
-    "Sem qualidade de segurado — não há direito à pensão previdenciária",
+    "Sem direito à pensão previdenciária",
     [
-      "Como a pessoa falecida não tinha vínculo com o INSS, não é possível pedir pensão por morte.",
-      "Se você (dependente) tem baixa renda e é idoso ou tem deficiência, vale avaliar o BPC/LOAS em seu próprio nome."
+      "Sem vínculo com o INSS, não há pensão por morte.",
+      "Avalie o BPC/LOAS em seu próprio nome."
     ],
     null
   );
@@ -885,27 +1063,27 @@ function r4ProximoPasso() {
 
 steps["r4_contribuicoes"] = (c) => {
   buildOptionsScreen(c, "Pensão por morte · 3/6",
-    "Quantas contribuições mensais a pessoa falecida tinha ao INSS, aproximadamente?", null, [
-    { label: "Menos de 18", onClick: () => { state.answers.r4_contribuicoes = "menos18"; goTo(r4ProximoPasso()); } },
-    { label: "18 ou mais", onClick: () => { state.answers.r4_contribuicoes = "mais18"; goTo(r4ProximoPasso()); } },
-    { label: "Não sei", onClick: () => { state.answers.r4_contribuicoes = "naosei"; goTo(r4ProximoPasso()); } },
+    "Quantas contribuições mensais o falecido tinha?", null, [
+    { label: "Menos de 18", icon: "calendar", onClick: () => { state.answers.r4_contribuicoes = "menos18"; goTo(r4ProximoPasso()); } },
+    { label: "18 ou mais", icon: "calendar", onClick: () => { state.answers.r4_contribuicoes = "mais18"; goTo(r4ProximoPasso()); } },
+    { label: "Não sei", icon: "help", onClick: () => { state.answers.r4_contribuicoes = "naosei"; goTo(r4ProximoPasso()); } },
   ]);
 };
 
 steps["r4_uniao"] = (c) => {
   buildOptionsScreen(c, "Pensão por morte · 4/6",
-    "Há quanto tempo durava o casamento ou união estável até o falecimento?", null, [
-    { label: "Menos de 2 anos", onClick: () => goTo("r4_acidente", "r4_uniao", "menos2") },
-    { label: "2 anos ou mais", onClick: () => goTo("r4_idade_conjuge", "r4_uniao", "mais2") },
+    "Quanto tempo durava a união até o falecimento?", null, [
+    { label: "Menos de 2 anos", icon: "clock", onClick: () => goTo("r4_acidente", "r4_uniao", "menos2") },
+    { label: "2 anos ou mais", icon: "calendar", onClick: () => goTo("r4_idade_conjuge", "r4_uniao", "mais2") },
   ]);
 };
 
 steps["r4_acidente"] = (c) => {
   buildOptionsScreen(c, "Pensão por morte · 5/6",
-    "O falecimento ocorreu por acidente (de qualquer natureza)?",
+    "O falecimento foi por acidente?",
     "Se sim, os requisitos de 18 contribuições e 2 anos de união são dispensados.", [
-    { label: "Sim", onClick: () => goTo("r4_idade_conjuge", "r4_acidente", "sim") },
-    { label: "Não", onClick: () => goTo("r4_resultado_curta", "r4_acidente", "nao") },
+    { label: "Sim", icon: "check", onClick: () => goTo("r4_idade_conjuge", "r4_acidente", "sim") },
+    { label: "Não", icon: "cross", onClick: () => goTo("r4_resultado_curta", "r4_acidente", "nao") },
   ]);
 };
 
@@ -913,8 +1091,8 @@ steps["r4_resultado_curta"] = (c) => {
   buildResultScreen(c, "eligible",
     "Você tem direito, mas por prazo curto",
     [
-      "Como o casamento/união tinha menos de 2 anos (e o falecimento não foi por acidente), a pensão dura apenas 4 meses.",
-      "Ainda assim, é um direito — vale formalizar o pedido."
+      "União com menos de 2 anos (sem acidente): pensão por apenas 4 meses.",
+      "Ainda assim, vale formalizar o pedido."
     ],
     null
   );
@@ -922,8 +1100,8 @@ steps["r4_resultado_curta"] = (c) => {
 
 steps["r4_idade_conjuge"] = (c) => {
   buildNumberScreen(c, "Pensão por morte · 6/6",
-    "Qual a idade do(a) dependente (você) na data do falecimento?", null, "r4_idade_conjuge_val",
-    (val) => goTo("r4_resultado_conjuge", "r4_idade_conjuge_val", val)
+    "Qual era sua idade na data do falecimento?", null, "r4_idade_conjuge_val",
+    (val) => goTo("r4_resultado_conjuge", "r4_idade_conjuge_val", val), { hero: true }
   );
 };
 
@@ -942,24 +1120,24 @@ steps["r4_resultado_conjuge"] = (c) => {
   if (contribuicoes === "naosei") {
     buildResultScreen(c, "review",
       "Pode ter direito — confirme as contribuições do falecido",
-      ["A duração e o valor dependem do número de contribuições do falecido ao INSS, que pode ser confirmado pelo CNIS dele."],
-      `Duração estimada pela idade informada: ${duracao}.`
+      ["Duração e valor dependem do CNIS do falecido."],
+      `Duração estimada pela idade: ${duracao}.`
     );
     return;
   }
 
   buildResultScreen(c, "eligible",
     "Você atende aos requisitos da pensão por morte",
-    ["Com base na idade informada na data do óbito, a duração estimada do benefício é:"],
-    `Duração estimada: ${duracao}. Valor: 50% do benefício do falecido + 10% por dependente habilitado (até 100%).`
+    [],
+    `Duração estimada: ${duracao}. Valor: 50% do benefício + 10% por dependente (até 100%).`
   );
 };
 
 steps["r4_idade_filho"] = (c) => {
   buildOptionsScreen(c, "Pensão por morte · 4/4", "Qual a idade do(a) dependente?", null, [
-    { label: "Menos de 21 anos (e não emancipado)", onClick: () => goTo("r4_resultado_filho", "r4_filho_idade", "menor21") },
-    { label: "21 anos ou mais, com deficiência ou invalidez", onClick: () => goTo("r4_resultado_filho", "r4_filho_idade", "maior_invalido") },
-    { label: "21 anos ou mais, sem deficiência/invalidez", onClick: () => goTo("r4_resultado_filho", "r4_filho_idade", "maior_sem") },
+    { label: "Menos de 21 anos", icon: "baby", onClick: () => goTo("r4_resultado_filho", "r4_filho_idade", "menor21") },
+    { label: "21+ anos, com deficiência ou invalidez", icon: "heart", onClick: () => goTo("r4_resultado_filho", "r4_filho_idade", "maior_invalido") },
+    { label: "21+ anos, sem deficiência", icon: "users", onClick: () => goTo("r4_resultado_filho", "r4_filho_idade", "maior_sem") },
   ]);
 };
 
@@ -968,15 +1146,15 @@ steps["r4_resultado_filho"] = (c) => {
   if (situacao === "maior_sem") {
     buildResultScreen(c, "no",
       "Não há mais direito por idade",
-      ["A pensão por morte para filhos cessa aos 21 anos, salvo em caso de invalidez ou deficiência."],
+      ["A pensão para filhos cessa aos 21 anos, salvo invalidez ou deficiência."],
       null
     );
   } else {
     const duracao = situacao === "menor21" ? "até completar 21 anos" : "vitalícia, enquanto durar a condição";
     buildResultScreen(c, "eligible",
       "Você atende aos requisitos da pensão por morte",
-      [`Duração estimada: ${duracao}.`],
-      "Valor: 50% do benefício do falecido + 10% por dependente habilitado (até 100%)."
+      [],
+      `Duração: ${duracao}. Valor: 50% do benefício + 10% por dependente (até 100%).`
     );
   }
 };
@@ -985,8 +1163,8 @@ steps["r4_resultado_outros"] = (c) => {
   buildResultScreen(c, "review",
     "Pode ter direito — análise necessária",
     [
-      "Para pais e irmãos dependentes, a duração e as condições exigem comprovação específica de dependência econômica.",
-      "Um advogado pode avaliar a documentação necessária para o seu caso."
+      "Pais e irmãos dependentes precisam comprovar dependência econômica.",
+      "Um advogado avalia a documentação necessária."
     ],
     null
   );
@@ -997,23 +1175,24 @@ steps["r4_resultado_outros"] = (c) => {
 // =========================================
 
 steps["r5_p1"] = (c) => {
-  buildOptionsScreen(c, "BPC/LOAS · 1/4", "Você se encaixa em qual situação?", null, [
-    { label: "Tenho 65 anos ou mais", onClick: () => goTo("r5_pessoas", "r5_situacao", "idoso") },
-    { label: "Tenho menos de 65 anos, mas tenho deficiência de longo prazo (2+ anos)", onClick: () => goTo("r5_pessoas", "r5_situacao", "deficiencia") },
-    { label: "Sou responsável por uma criança/adolescente com deficiência", onClick: () => goTo("r5_pessoas", "r5_situacao", "responsavel") },
+  buildOptionsScreen(c, "BPC/LOAS · 1/4", "Qual é a sua situação?", null, [
+    { label: "Tenho 65 anos ou mais", icon: "clock", onClick: () => goTo("r5_pessoas", "r5_situacao", "idoso") },
+    { label: "Tenho deficiência de longo prazo", icon: "heart", onClick: () => goTo("r5_pessoas", "r5_situacao", "deficiencia") },
+    { label: "Sou responsável por uma criança com deficiência", icon: "baby", onClick: () => goTo("r5_pessoas", "r5_situacao", "responsavel") },
   ]);
 };
 
 steps["r5_pessoas"] = (c) => {
   buildNumberScreen(c, "BPC/LOAS · 2/4",
-    "Quantas pessoas moram na sua casa, incluindo você (só família: cônjuge, pais, filhos, irmãos solteiros)?", null, "r5_pessoas_val",
+    "Quantas pessoas moram na sua casa?",
+    "Conte só a família: cônjuge, pais, filhos, irmãos solteiros.", "r5_pessoas_val",
     (val) => goTo("r5_renda", "r5_pessoas_val", val)
   );
 };
 
 steps["r5_renda"] = (c) => {
   buildNumberScreen(c, "BPC/LOAS · 3/4",
-    "Qual a renda total da casa por mês, somando o que todos ganham?",
+    "Qual a renda total da casa por mês?",
     "Não inclua BPC ou Bolsa Família de outra pessoa da casa.", "r5_renda_val",
     (val) => goTo("r5_cadunico", "r5_renda_val", val), { allowZero: true }
   );
@@ -1021,18 +1200,20 @@ steps["r5_renda"] = (c) => {
 
 steps["r5_cadunico"] = (c) => {
   buildOptionsScreen(c, "BPC/LOAS · 4/4",
-    "Você (ou a pessoa para quem está pedindo) já está cadastrado no CadÚnico (Cadastro Único / CRAS)?", null, [
-    { label: "Sim", onClick: () => goTo("r5_resultado", "r5_cadunico", "sim") },
-    { label: "Não", onClick: () => goTo("r5_resultado", "r5_cadunico", "nao") },
-    { label: "Não sei", onClick: () => goTo("r5_resultado", "r5_cadunico", "naosei") },
+    "Já está cadastrado no CadÚnico?",
+    "Cadastro Único, feito no CRAS.", [
+    { label: "Sim", icon: "check", onClick: () => goTo("r5_resultado", "r5_cadunico", "sim") },
+    { label: "Não", icon: "cross", onClick: () => goTo("r5_resultado", "r5_cadunico", "nao") },
+    { label: "Não sei", icon: "help", onClick: () => goTo("r5_resultado", "r5_cadunico", "naosei") },
   ]);
 };
 
 steps["r5_gastos_saude"] = (c) => {
   buildOptionsScreen(c, "BPC/LOAS · extra",
-    "Há gastos mensais altos com remédios, fraldas ou tratamentos de saúde na família?", null, [
-    { label: "Sim", onClick: () => goTo("r5_resultado_final", "r5_gastos_saude", "sim") },
-    { label: "Não", onClick: () => goTo("r5_resultado_final", "r5_gastos_saude", "nao") },
+    "Há gastos altos com saúde na família?",
+    "Remédios, fraldas ou tratamentos.", [
+    { label: "Sim", icon: "check", onClick: () => goTo("r5_resultado_final", "r5_gastos_saude", "sim") },
+    { label: "Não", icon: "cross", onClick: () => goTo("r5_resultado_final", "r5_gastos_saude", "nao") },
   ]);
 };
 
@@ -1083,6 +1264,108 @@ steps["r5_resultado_final"] = (c) => {
 };
 
 // ============================================================
+// RESUMO TÉCNICO PARA ADVOGADO — traduz as respostas em linguagem natural
+// ============================================================
+
+function yesNo(v, simTxt = "Sim", naoTxt = "Não", naoseiTxt = "Não soube informar") {
+  if (v === "sim") return simTxt;
+  if (v === "nao") return naoTxt;
+  if (v === "naosei") return naoseiTxt;
+  return null;
+}
+
+function buildLawyerSummaryText() {
+  const a = state.answers;
+  const lines = [];
+
+  // ---- identificação do ramo ----
+  const ramoLabels = {
+    aposentadoria: "Aposentadoria",
+    incapacidade: "Incapacidade (auxílio-doença ou aposentadoria por invalidez)",
+    pensao: "Pensão por morte",
+    bpc: "BPC/LOAS",
+  };
+  if (a.situacao) lines.push(`Solicitação relacionada a: ${ramoLabels[a.situacao] || a.situacao}.`);
+
+  // ---- RAMO 1: aposentadoria ----
+  if (a.situacao === "aposentadoria") {
+    const tipoLabels = { urbana: "trabalho urbano com contribuição ao INSS", rural: "trabalho rural", especial: "atividade especial (insalubre/perigosa)", naosei: "tempo de contribuição incerto, tratado como urbano" };
+    if (a.r1_tipo) lines.push(`Perfil informado: ${tipoLabels[a.r1_tipo] || a.r1_tipo}.`);
+
+    if (a.r1_idade !== undefined) lines.push(`Idade atual: ${a.r1_idade} anos.`);
+    if (a.r1_sexo) lines.push(`Sexo: ${a.r1_sexo === "F" ? "feminino" : "masculino"}.`);
+    if (a.r1_tempo_contrib !== undefined) lines.push(`Tempo de contribuição ao INSS informado: ${a.r1_tempo_contrib} anos.`);
+    if (a.r1_antes_2019) lines.push(`Começou a contribuir antes de 13/11/2019: ${yesNo(a.r1_antes_2019)}.`);
+
+    if (a.r1b_tempo_ok) lines.push(`Comprova 15+ anos de atividade rural: ${yesNo(a.r1b_tempo_ok)}.`);
+    if (a.r1b_idade_val !== undefined) lines.push(`Idade informada (rural): ${a.r1b_idade_val} anos.`);
+    if (a.r1b_sexo) lines.push(`Sexo: ${a.r1b_sexo === "F" ? "feminino" : "masculino"}.`);
+
+    const riscoLabels = { "15": "alto risco (15 anos exigidos)", "20": "risco médio (20 anos exigidos)", "25": "risco mais brando/periculosidade (25 anos exigidos)", naosei: "risco não classificado pelo cliente (referência conservadora de 25 anos)" };
+    if (a.r1c_risco_tipo) lines.push(`Categoria de risco da atividade especial: ${riscoLabels[a.r1c_risco_tipo] || a.r1c_risco_tipo}.`);
+    if (a.r1c_tempo_val !== undefined) lines.push(`Tempo de exposição informado: ${a.r1c_tempo_val} anos.`);
+    if (a.r1c_antes_2019) lines.push(`Começou a trabalhar nessa condição antes de 13/11/2019: ${yesNo(a.r1c_antes_2019)}.`);
+  }
+
+  // ---- RAMOS 2/3: incapacidade ----
+  if (a.situacao === "incapacidade") {
+    const duracaoLabels = { menos15: "menos de 15 dias", media: "entre 15 dias e alguns meses", permanente: "longa duração, possivelmente permanente" };
+    if (a.r23_duracao) lines.push(`Tempo de afastamento do trabalho: ${duracaoLabels[a.r23_duracao] || a.r23_duracao}.`);
+
+    const vinculoLabels = { ativo: "estava contribuindo ao INSS no início da incapacidade", parado: "havia parado de contribuir há mais de 1 ano", nunca: "nunca contribuiu ao INSS" };
+    if (a.r23_vinculo) lines.push(`Vínculo com o INSS: ${vinculoLabels[a.r23_vinculo] || a.r23_vinculo}.`);
+    if (a.r23_periodo_graca_estendido) lines.push(`Situação que estende o período de graça (desemprego com 10+ anos de contribuição, filho pequeno ou prisão): ${yesNo(a.r23_periodo_graca_estendido)}.`);
+
+    const tempoContribLabels = { menos12: "menos de 12 meses", mais12: "12 meses ou mais", naosei: "não soube informar" };
+    if (a.r23_tempo_contrib) lines.push(`Tempo de contribuição ao INSS: ${tempoContribLabels[a.r23_tempo_contrib] || a.r23_tempo_contrib}.`);
+
+    const causaLabels = { acidente: "acidente (de qualquer natureza)", grave: "doença grave da lista do INSS", ocupacional: "doença profissional/ocupacional", comum: "doença comum, sem dispensa de carência" };
+    if (a.r23_causa) lines.push(`Causa do afastamento: ${causaLabels[a.r23_causa] || a.r23_causa}.`);
+
+    const permanenteLabels = { sim: "incapacidade permanente, já atestada por médico", incerto: "ainda em tratamento, sem definição médica de permanência", nao: "incapacidade temporária" };
+    if (a.r23_permanente) lines.push(`Natureza da incapacidade: ${permanenteLabels[a.r23_permanente] || a.r23_permanente}.`);
+
+    if (a.r23_relacao_trabalho) lines.push(`Relação com acidente de trabalho ou doença ocupacional: ${yesNo(a.r23_relacao_trabalho)}.`);
+    if (a.r23_ajuda_terceiros) lines.push(`Necessita de ajuda de terceiros para atividades básicas (possível adicional de 25%): ${yesNo(a.r23_ajuda_terceiros)}.`);
+  }
+
+  // ---- RAMO 4: pensão por morte ----
+  if (a.situacao === "pensao") {
+    const parentescoLabels = { conjuge: "cônjuge ou companheiro(a)", filho: "filho(a) ou enteado(a)", pais: "pai ou mãe (dependência econômica)", irmao: "irmão ou irmã (dependência econômica)" };
+    if (a.r4_parentesco) lines.push(`Parentesco do requerente com o falecido: ${parentescoLabels[a.r4_parentesco] || a.r4_parentesco}.`);
+
+    const seguradoLabels = { ativo: "era segurado ativo ou aposentado no momento do óbito", graca: "havia parado de contribuir há pouco tempo (possível período de graça)", nunca: "não contribuía há muito tempo ou nunca contribuiu" };
+    if (a.r4_segurado) lines.push(`Qualidade de segurado do falecido: ${seguradoLabels[a.r4_segurado] || a.r4_segurado}.`);
+
+    const contribLabels = { menos18: "menos de 18 contribuições mensais", mais18: "18 contribuições mensais ou mais", naosei: "número de contribuições não informado" };
+    if (a.r4_contribuicoes) lines.push(`Contribuições do falecido ao INSS: ${contribLabels[a.r4_contribuicoes] || a.r4_contribuicoes}.`);
+
+    if (a.r4_uniao) lines.push(`Duração da união/casamento até o óbito: ${a.r4_uniao === "menos2" ? "menos de 2 anos" : "2 anos ou mais"}.`);
+    if (a.r4_acidente) lines.push(`Falecimento decorrente de acidente: ${yesNo(a.r4_acidente)}.`);
+    if (a.r4_idade_conjuge_val !== undefined) lines.push(`Idade do dependente (cônjuge) na data do óbito: ${a.r4_idade_conjuge_val} anos.`);
+
+    const filhoLabels = { menor21: "menor de 21 anos, não emancipado", maior_invalido: "21 anos ou mais, com deficiência ou invalidez", maior_sem: "21 anos ou mais, sem deficiência ou invalidez" };
+    if (a.r4_filho_idade) lines.push(`Situação do dependente (filho/enteado): ${filhoLabels[a.r4_filho_idade] || a.r4_filho_idade}.`);
+  }
+
+  // ---- RAMO 5: BPC/LOAS ----
+  if (a.situacao === "bpc") {
+    const situacaoLabels = { idoso: "idoso, 65 anos ou mais", deficiencia: "pessoa com deficiência de longo prazo", responsavel: "responsável legal por criança/adolescente com deficiência" };
+    if (a.r5_situacao) lines.push(`Situação do requerente: ${situacaoLabels[a.r5_situacao] || a.r5_situacao}.`);
+    if (a.r5_pessoas_val !== undefined) lines.push(`Número de pessoas no grupo familiar: ${a.r5_pessoas_val}.`);
+    if (a.r5_renda_val !== undefined) lines.push(`Renda total mensal da família informada: ${fmtMoney(toNum(a.r5_renda_val))}.`);
+    if (a.r5_percapita !== undefined) lines.push(`Renda per capita calculada: ${fmtMoney(a.r5_percapita)} (limite legal: ${fmtMoney(LIMITE_BPC_PERCAPITA)}).`);
+    if (a.r5_cadunico) lines.push(`Cadastro no CadÚnico: ${yesNo(a.r5_cadunico, "Sim, já cadastrado", "Ainda não cadastrado", "Não soube informar")}.`);
+    if (a.r5_gastos_saude) lines.push(`Gastos elevados com saúde na família (remédios, fraldas, tratamentos): ${yesNo(a.r5_gastos_saude)}.`);
+  }
+
+  // ---- contato (se já capturado) ----
+  if (a.leadName) lines.push(`Contato informado: ${a.leadName}${a.leadPhone ? " — " + a.leadPhone : ""}.`);
+
+  return lines;
+}
+
+// ============================================================
 // RENDER PRINCIPAL
 // ============================================================
 
@@ -1096,7 +1379,7 @@ function render() {
   topbar.className = "topbar";
   const backBtn = document.createElement("button");
   backBtn.className = "back-btn";
-  backBtn.innerHTML = "&#8592;";
+  backBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/></svg>`;
   backBtn.disabled = state.history.length <= 1;
   backBtn.onclick = goBack;
   const track = document.createElement("div");
@@ -1124,11 +1407,15 @@ function render() {
     container.innerHTML = `<div class="card"><p>Tela não encontrada: ${stepId}</p></div>`;
   }
 
-  // painel de debug — mostra respostas acumuladas na sessão
-  const debug = document.createElement("details");
-  debug.className = "debug-panel";
-  debug.innerHTML = `<summary>Ver respostas armazenadas na sessão (debug)</summary><pre>${JSON.stringify(state.answers, null, 2)}\n\nHistórico de telas:\n${state.history.join(" → ")}</pre>`;
-  app.appendChild(debug);
+  // resumo técnico para advogado — traduz as respostas em linguagem natural
+  const summaryLines = buildLawyerSummaryText();
+  const summary = document.createElement("details");
+  summary.className = "summary-panel";
+  const bodyHtml = summaryLines.length
+    ? summaryLines.map(l => `<p>${l}</p>`).join("")
+    : `<p class="summary-empty">Nenhuma informação registrada ainda.</p>`;
+  summary.innerHTML = `<summary>Resumo técnico para advogado</summary><div class="summary-body">${bodyHtml}</div>`;
+  app.appendChild(summary);
 }
 
 render();
