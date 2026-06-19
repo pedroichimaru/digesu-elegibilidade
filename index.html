@@ -474,17 +474,12 @@ function goBack() {
   }
 }
 function goHome() {
-  // volta para a tela inicial sem apagar as respostas já dadas — funciona
-  // como "ir para o começo", não como "recomeçar do zero" (isso é o que o
-  // botão "Recomeçar simulação" faz, via resetState). Empilha uma entrada
-  // real no navegador, então o "voltar" do browser ainda retoma de onde a
-  // pessoa estava antes de clicar no título.
-  if (currentStep() !== "start") {
-    state.history.push("start");
-    saveState(state);
-    history.pushState({ stepStack: state.history.slice() }, "");
-    render();
-  }
+  // hard refresh real: limpa a sessão salva e recarrega a página do zero.
+  // Isso zera tanto as respostas quanto a contagem de passos e o histórico
+  // do navegador de uma vez — sem isso, "voltar" levaria a pessoa para um
+  // "Passo 12" numa tela que deveria ser o início.
+  sessionStorage.removeItem(STORAGE_KEY);
+  location.reload();
 }
 
 // ---------- helpers de cálculo simplificado ----------
