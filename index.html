@@ -57,6 +57,19 @@
     letter-spacing: -0.01em;
     color: #ffffff;
   }
+  .site-header h2 button {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font-family: var(--font);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #ffffff;
+    cursor: pointer;
+  }
+  .site-header h2 button:hover { opacity: 0.85; }
   .site-header .version {
     font-size: 13px;
     font-weight: 500;
@@ -366,7 +379,7 @@
 <body>
 <div class="site-header">
   <div class="site-header-inner">
-    <h2>GuiaPrev</h2>
+    <h2><button type="button" id="homeLink" onclick="goHome()">DiGesuPrev</button></h2>
     <span class="version">v. 2026.001</span>
   </div>
 </div>
@@ -458,6 +471,19 @@ function goBack() {
     // aciona o histórico real do navegador; o ajuste de state.history
     // acontece no listener de popstate, mantendo as duas fontes sincronizadas
     history.back();
+  }
+}
+function goHome() {
+  // volta para a tela inicial sem apagar as respostas já dadas — funciona
+  // como "ir para o começo", não como "recomeçar do zero" (isso é o que o
+  // botão "Recomeçar simulação" faz, via resetState). Empilha uma entrada
+  // real no navegador, então o "voltar" do browser ainda retoma de onde a
+  // pessoa estava antes de clicar no título.
+  if (currentStep() !== "start") {
+    state.history.push("start");
+    saveState(state);
+    history.pushState({ stepStack: state.history.slice() }, "");
+    render();
   }
 }
 
@@ -597,7 +623,6 @@ function buildResultScreen(container, type, title, bodyParagraphs, valueText) {
     <div class="lead-box" id="leadBox">
       <div class="lead-title">${type === "no" ? "Quer uma segunda opinião gratuita?" : "Fale com um advogado especialista"}</div>
       <input type="text" id="leadName" placeholder="Seu nome">
-      <input type="tel" id="leadPhone" placeholder="WhatsApp (com DDD)">
       <button class="next-btn" id="leadSubmit">${type === "eligible" ? "Quero confirmar meu caso" : type === "review" ? "Quero a análise gratuita" : "Quero falar com um advogado"}</button>
     </div>
     <button class="restart-btn" id="restartBtn">Recomeçar simulação</button>
@@ -606,13 +631,37 @@ function buildResultScreen(container, type, title, bodyParagraphs, valueText) {
   card.querySelector("#restartBtn").onclick = resetState;
   card.querySelector("#leadSubmit").onclick = () => {
     const name = card.querySelector("#leadName").value.trim();
-    const phone = card.querySelector("#leadPhone").value.trim();
-    if (!name || !phone) { alert("Preencha nome e WhatsApp para teste."); return; }
-    state.answers.leadName = name;
-    state.answers.leadPhone = phone;
-    saveState(state);
-    alert("✅ [Simulação] Lead capturado: " + name + " / " + phone);
+    if (name) {
+      state.answers.leadName = name;
+      saveState(state);
+    }
+    openWhatsApp(type, title, name);
   };
+}
+
+const WHATSAPP_NUMBER = "5511973111511";
+
+function openWhatsApp(type, resultTitle, name) {
+  const ramoLabels = {
+    aposentadoria: "Aposentadoria",
+    incapacidade: "Incapacidade (auxílio-doença ou aposentadoria por invalidez)",
+    pensao: "Pensão por morte",
+    bpc: "BPC/LOAS",
+  };
+  const ramo = ramoLabels[state.answers.situacao] || "Benefício previdenciário";
+  const statusLabel = type === "eligible" ? "ELEGÍVEL" : type === "review" ? "ANÁLISE NECESSÁRIA" : "NÃO ELEGÍVEL POR ENQUANTO";
+
+  const linhas = [
+    `Olá! Fiz a simulação no DiGesuPrev e meu resultado foi: ${statusLabel}.`,
+    `Assunto: ${ramo}`,
+    `Resultado: ${resultTitle}`,
+  ];
+  if (name) linhas.unshift(`Meu nome é ${name}.`);
+  linhas.push("Gostaria de conversar com um advogado sobre o meu caso.");
+
+  const texto = encodeURIComponent(linhas.join("\n"));
+  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${texto}`;
+  window.open(url, "_blank");
 }
 
 // ============================================================
@@ -645,7 +694,9 @@ steps["r1_p1"] = (c) => {
 };
 
 steps["r1_naosei_info"] = (c) => {
-  buildInfoScreen(c, "Aposentadoria",
+  // tela informativa de transição entre o passo 1 e o passo 2 do ramo;
+  // usa a mesma fração do passo 1 (não é uma nova pergunta, só uma explicação)
+  buildInfoScreen(c, "Aposentadoria · 1/6",
     "Sem problemas, vamos estimar",
     "Calculamos com base na sua idade e situação. Depois, um advogado confirma os dados no seu CNIS (extrato do INSS).",
     "Continuar",
@@ -883,7 +934,13 @@ steps["r1c_resultado"] = (c) => {
 // =========================================
 
 steps["r23_p1"] = (c) => {
-  buildOptionsScreen(c, "Incapacidade · 1/5", "Há quanto tempo você não pode trabalhar?", null, [
+  // nota sobre numeração: este ramo bifurca depois da 5ª tela em dois
+  // caminhos de tamanhos diferentes (6 telas para auxílio-doença, 8 para
+  // incapacidade permanente). Para a barra de progresso nunca regredir,
+  // TODAS as telas usam o denominador do caminho mais longo (8) desde o
+  // início — quem sai no caminho mais curto simplesmente dá um salto maior
+  // até o resultado, em vez de a barra recuar ao entrar no caminho mais longo.
+  buildOptionsScreen(c, "Incapacidade · 1/8", "Há quanto tempo você não pode trabalhar?", null, [
     { label: "Menos de 15 dias", icon: "calendar", onClick: () => goTo("r23_menos15", "r23_duracao", "menos15") },
     { label: "Entre 15 dias e alguns meses", icon: "clock", onClick: () => goTo("r23_vinculo", "r23_duracao", "media") },
     { label: "Já dura muito tempo, parece permanente", icon: "alert", onClick: () => goTo("r23_vinculo", "r23_duracao", "permanente") },
@@ -902,7 +959,7 @@ steps["r23_menos15"] = (c) => {
 };
 
 steps["r23_vinculo"] = (c) => {
-  buildOptionsScreen(c, "Incapacidade · 2/5",
+  buildOptionsScreen(c, "Incapacidade · 2/8",
     "Você tinha vínculo com o INSS quando ficou doente?", null, [
     { label: "Sim, estava contribuindo", icon: "check", onClick: () => goTo("r23_tempo_contrib", "r23_vinculo", "ativo") },
     { label: "Parei há mais de 1 ano", icon: "clock", onClick: () => goTo("r23_periodo_graca", "r23_vinculo", "parado") },
@@ -922,7 +979,7 @@ steps["r23_sem_segurado"] = (c) => {
 };
 
 steps["r23_periodo_graca"] = (c) => {
-  buildOptionsScreen(c, "Incapacidade · 3/5",
+  buildOptionsScreen(c, "Incapacidade · 2/8",
     "Alguma dessas situações é sua?",
     "Desemprego com 10+ anos de contribuição, filho pequeno, ou estar preso.", [
     { label: "Sim, uma dessas situações", icon: "check", onClick: () => goTo("r23_tempo_contrib", "r23_periodo_graca_estendido", "sim") },
@@ -942,7 +999,7 @@ steps["r23_resultado_incerto"] = (c) => {
 };
 
 steps["r23_tempo_contrib"] = (c) => {
-  buildOptionsScreen(c, "Incapacidade · 4/5",
+  buildOptionsScreen(c, "Incapacidade · 3/8",
     "Há quanto tempo você contribui?", null, [
     { label: "Menos de 12 meses", icon: "calendar", onClick: () => goTo("r23_causa", "r23_tempo_contrib", "menos12") },
     { label: "12 meses ou mais", icon: "calendar", onClick: () => goTo("r23_causa", "r23_tempo_contrib", "mais12") },
@@ -951,7 +1008,7 @@ steps["r23_tempo_contrib"] = (c) => {
 };
 
 steps["r23_causa"] = (c) => {
-  buildOptionsScreen(c, "Incapacidade · 5/5",
+  buildOptionsScreen(c, "Incapacidade · 4/8",
     "Qual a causa do afastamento?",
     "Esses casos dispensam a exigência de 12 meses de contribuição.", [
     { label: "Acidente, de qualquer natureza", icon: "alert", onClick: () => goTo("r23_permanencia", "r23_causa", "acidente") },
@@ -962,8 +1019,7 @@ steps["r23_causa"] = (c) => {
 };
 
 steps["r23_permanencia"] = (c) => {
-  // pergunta extra para diferenciar Ramo 2 (temporária) de Ramo 3 (permanente)
-  buildOptionsScreen(c, "Incapacidade · extra",
+  buildOptionsScreen(c, "Incapacidade · 5/8",
     "Um médico já disse que é permanente?",
     "Sem chance de reabilitação ou retorno à função.", [
     { label: "Sim, é permanente", icon: "check", onClick: () => goTo("r3_relacao_trabalho", "r23_permanente", "sim") },
@@ -1003,7 +1059,7 @@ steps["r2_resultado"] = (c) => {
 };
 
 steps["r3_relacao_trabalho"] = (c) => {
-  buildOptionsScreen(c, "Incapacidade permanente · extra",
+  buildOptionsScreen(c, "Incapacidade permanente · 6/8",
     "Tem relação com acidente ou doença ocupacional?",
     "Não muda se você tem direito, mas muda o valor do benefício.", [
     { label: "Sim", icon: "check", onClick: () => goTo("r3_ajuda_terceiros", "r23_relacao_trabalho", "sim") },
@@ -1013,7 +1069,7 @@ steps["r3_relacao_trabalho"] = (c) => {
 };
 
 steps["r3_ajuda_terceiros"] = (c) => {
-  buildOptionsScreen(c, "Incapacidade permanente · extra",
+  buildOptionsScreen(c, "Incapacidade permanente · 7/8",
     "Precisa de ajuda para o dia a dia?",
     "Comer, se vestir ou se locomover.", [
     { label: "Sim", icon: "check", onClick: () => goTo("r3_resultado", "r23_ajuda_terceiros", "sim") },
@@ -1063,6 +1119,11 @@ steps["r3_resultado"] = (c) => {
 // =========================================
 
 steps["r4_p1"] = (c) => {
+  // nota sobre numeração: o ramo "pensão por morte" tem caminhos com tamanhos
+  // diferentes dependendo do parentesco escolhido aqui — cônjuge segue até 6
+  // telas (1/6 a 6/6), enquanto filho/enteado tem só 4 telas no total (a
+  // numeração "X/4" aparece a partir de r4_idade_filho). Isso é intencional:
+  // cada eyebrow usa o total real do caminho que a pessoa está percorrendo.
   buildOptionsScreen(c, "Pensão por morte · 1/6", "Qual seu parentesco com quem faleceu?", null, [
     { label: "Cônjuge ou companheiro(a)", icon: "ring", onClick: () => goTo("r4_segurado", "r4_parentesco", "conjuge") },
     { label: "Filho(a) ou enteado(a)", icon: "baby", onClick: () => goTo("r4_segurado", "r4_parentesco", "filho") },
@@ -1247,7 +1308,9 @@ steps["r5_cadunico"] = (c) => {
 };
 
 steps["r5_gastos_saude"] = (c) => {
-  buildOptionsScreen(c, "BPC/LOAS · extra",
+  // alcançada via goTo() direto a partir de r5_resultado quando a renda per
+  // capita está acima do limite — é uma 5ª tela condicional desse caminho
+  buildOptionsScreen(c, "BPC/LOAS · 5/5",
     "Há gastos altos com saúde na família?",
     "Remédios, fraldas ou tratamentos.", [
     { label: "Sim", icon: "check", onClick: () => goTo("r5_resultado_final", "r5_gastos_saude", "sim") },
@@ -1273,7 +1336,21 @@ steps["r5_resultado"] = (c) => {
       "Valor do BPC: 1 salário-mínimo (" + fmtMoney(SALARIO_MIN) + "), fixo."
     );
   } else {
-    goTo("r5_gastos_saude");
+    // Importante: NÃO chamar goTo() aqui dentro. Este step já está sendo
+    // executado dentro de um render() em andamento (chamado por stepFn na
+    // própria função render()); disparar outro render() agora causaria
+    // reentrância — o render() externo continuaria depois e duplicaria a
+    // tela na tela (foi exatamente o bug visto no branch do BPC/LOAS).
+    //
+    // Também SUBSTITUÍMOS a entrada "r5_resultado" no histórico por
+    // "r5_gastos_saude" (em vez de empilhar uma nova entrada). Se apenas
+    // empilhássemos, o botão "voltar" levaria de volta a "r5_resultado",
+    // que se redesenharia e rediria de novo para "r5_gastos_saude" —
+    // um loop que trava o botão de voltar nesse ponto.
+    state.history[state.history.length - 1] = "r5_gastos_saude";
+    saveState(state);
+    history.replaceState({ stepStack: state.history.slice() }, "");
+    steps["r5_gastos_saude"](c);
   }
 };
 
