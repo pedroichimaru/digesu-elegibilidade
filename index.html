@@ -366,7 +366,7 @@
 <body>
 <div class="site-header">
   <div class="site-header-inner">
-    <h2>DiGesuPrev</h2>
+    <h2>GuiaPrev</h2>
     <span class="version">v. 2026.001</span>
   </div>
 </div>
@@ -401,6 +401,29 @@ function resetState() {
 }
 
 let state = loadState();
+
+// ---------- controle de progresso visual ----------
+// cada chamada a build*Screen atualiza essas variáveis; o render() as lê
+// depois de desenhar a tela atual, para calcular a % real da barra de evolução
+let isResultScreen = false;
+let lastEyebrowUsed = "";
+
+function calcProgressPct() {
+  if (isResultScreen) return 100;
+  // tenta extrair "X/Y" do eyebrow (ex: "Pensão por morte · 4/6" -> 4, 6)
+  const match = lastEyebrowUsed.match(/(\d+)\/(\d+)/);
+  if (match) {
+    const current = parseInt(match[1], 10);
+    const total = parseInt(match[2], 10);
+    // o "Y" representa o total de PERGUNTAS, não inclui a tela de resultado em si.
+    // por isso o cap é 92%: mesmo na última pergunta (X === Y), ainda falta
+    // responder e cair na tela de resultado, que é a única que pode chegar a 100%.
+    return Math.min(92, Math.round((current / total) * 100));
+  }
+  // telas sem fração (ex: "Início", telas informativas de transição) ficam num valor baixo fixo
+  if (lastEyebrowUsed === "Início") return 5;
+  return 15;
+}
 
 // ---------- integração com o histórico do navegador ----------
 // cada avanço empilha uma entrada real no browser (pushState), guardando uma
@@ -491,6 +514,7 @@ function optionButton(label, onClick, iconKey) {
 }
 
 function buildOptionsScreen(container, eyebrow, question, hint, options) {
+  lastEyebrowUsed = eyebrow;
   container.innerHTML = "";
   const card = document.createElement("div");
   card.className = "card";
@@ -515,6 +539,7 @@ function buildOptionsScreen(container, eyebrow, question, hint, options) {
 }
 
 function buildNumberScreen(container, eyebrow, question, hint, key, nextStepFn, opts = {}) {
+  lastEyebrowUsed = eyebrow;
   container.innerHTML = "";
   const card = document.createElement("div");
   card.className = "card";
@@ -543,6 +568,7 @@ function buildNumberScreen(container, eyebrow, question, hint, key, nextStepFn, 
 }
 
 function buildInfoScreen(container, eyebrow, title, bodyHtml, ctaLabel, onCta) {
+  lastEyebrowUsed = eyebrow;
   container.innerHTML = "";
   const card = document.createElement("div");
   card.className = "card";
@@ -557,6 +583,7 @@ function buildInfoScreen(container, eyebrow, title, bodyHtml, ctaLabel, onCta) {
 }
 
 function buildResultScreen(container, type, title, bodyParagraphs, valueText) {
+  isResultScreen = true;
   container.innerHTML = "";
   const card = document.createElement("div");
   const cls = type === "eligible" ? "result-eligible" : type === "review" ? "result-review" : "result-no";
@@ -1386,6 +1413,18 @@ function render() {
 
   app.innerHTML = "";
 
+  // desenha o conteúdo da tela primeiro: isso atualiza isResultScreen/lastEyebrowUsed,
+  // que a barra de progresso (montada depois) usa para calcular a % real
+  isResultScreen = false;
+  lastEyebrowUsed = "";
+  const container = document.createElement("div");
+  const stepFn = steps[stepId];
+  if (stepFn) {
+    stepFn(container);
+  } else {
+    container.innerHTML = `<div class="card"><p>Tela não encontrada: ${stepId}</p></div>`;
+  }
+
   const topbar = document.createElement("div");
   topbar.className = "topbar";
   const backBtn = document.createElement("button");
@@ -1397,26 +1436,17 @@ function render() {
   track.className = "progress-track";
   const fill = document.createElement("div");
   fill.className = "progress-fill";
-  const pct = Math.min(95, state.history.length * 8);
+  const pct = calcProgressPct();
   fill.style.width = pct + "%";
   track.appendChild(fill);
   const label = document.createElement("div");
   label.className = "step-label";
-  label.textContent = "Tela " + state.history.length;
+  label.textContent = isResultScreen ? "Resultado" : "Passo " + state.history.length;
   topbar.appendChild(backBtn);
   topbar.appendChild(track);
   topbar.appendChild(label);
   app.appendChild(topbar);
-
-  const container = document.createElement("div");
   app.appendChild(container);
-
-  const stepFn = steps[stepId];
-  if (stepFn) {
-    stepFn(container);
-  } else {
-    container.innerHTML = `<div class="card"><p>Tela não encontrada: ${stepId}</p></div>`;
-  }
 
   // resumo técnico para advogado — traduz as respostas em linguagem natural
   const summaryLines = buildLawyerSummaryText();
